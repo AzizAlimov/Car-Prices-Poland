@@ -1,4 +1,4 @@
-cars <- read.csv("~/Downloads/Car_Prices_Poland_Kaggle.csv")
+cars <- read.csv("/Users/azizalimov/CarPricesPoland/data/Car_Prices_Poland_Kaggle.csv")
 
 length(unique(cars[['fuel']]))
 sum(is.na(cars$fuel))
@@ -49,3 +49,8 @@ ggplot(cleaned_cars, aes(x = fct_reorder(province, log(price), .fun = median), y
 length(unique(dat[['model']]))
 sum(is.na(dat$model))
 unique(dat[['model']])
+
+
+drop <- c("city", "generation_name")
+data = cars[,!(names(cars) %in% drop)]
+
