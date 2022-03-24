@@ -1,0 +1,82 @@
+---
+title: "STAT 447b Project"
+author: "Barrichello Noor (68448711)"
+date: "2/1/2022"
+output: pdf_document
+---
+```{r}
+library(dplyr)
+library(ggplot2)
+```
+
+
+```{r}
+yeardata = prices[1987<prices$year,]
+length(unique(yeardata$year))
+summary(yeardata$year)
+table(yeardata$year)
+hist(yeardata$year,breaks = 35, main ="Histogram of Year", xlab = "Year")
+hist((yeardata$year)^(4),breaks = 35, main ="Histogram of Year^3", xlab = "Year^3")
+bin1 <- prices %>% mutate(bin=cut(prices$year,55))
+bin2<- prices %>% mutate(bin=cut(prices$year,breaks = c(0,2000,2005,2010,2015,2020,2021,2022)))
+hist(as.numeric(bin1$bin))
+bin2$bin = as.factor(bin2$bin)
+hist(as.numeric(bin2$bin), main ="Histogram of Year After Binning", xlab = "Year")
+#barplot(prop.table(table((bin2$bin))))
+length(unique(prices$year))
+plot(prices$year,prices$price, ylab="Price in USD", xlab="Year",main="Scatterplot Price vs Year")
+```
+
+```{r}
+mileagedata = prices[1000000>prices$mileage,]
+summary(prices$mileage)
+length(unique(prices$mileage))
+hist(mileagedata$mileage,breaks=150, main ="Histogram of Mileage", xlab = "Mileage")
+hist((mileagedata$mileage)^(1/3), main ="Histogram of Mileage^(1/3)", xlab = "Mileage^(1/3)",breaks=150)
+bin3<- prices %>% mutate(bin=cut(prices$mileage,breaks = c(0,100,50000,100000,160000,200000,250000,2800000)))
+bin4<- prices %>% mutate(bin=cut(prices$mileage,breaks = c(0,10000,70000,146269,200000,250000,2800000)))
+table(prices$mileage)
+hist(as.numeric(bin3$bin))
+table(bin4$bin)
+hist(as.numeric(bin4$bin), main ="Histogram of Mileage After Binning", xlab = "Mileage")
+plot(as.numeric(bin4$bin),prices$price)
+plot(prices$mileage,prices$price, ylab="Price in USD", xlab="Mileage in Kilometers",main="Scatterplot Price vs Mileage")
+```
+
+
+```{r}
+summary(prices$vol_engine)
+table(prices$vol_engine)
+length(unique(prices$vol_engine))
+hist(prices$vol_engine,breaks = 100, main ="Histogram of Engine Volume", xlab = "Engine Volume")
+hist(sqrt(prices$vol_engine), main ="Histogram of sqrt(Engine Volume)", xlab = "sqrt(Engine Volume)",breaks=100)
+bin4<- prices %>% mutate(bin=cut(prices$vol_engine,breaks = c(0,1000,1400,1700,2000,7600 )))
+table(bin4$bin)
+hist(as.numeric(bin4$bin), main ="Histogram of Engine Volume After Binning", xlab = "Engine Volume")
+plot(sqrt(prices$vol_engine),prices$price)
+plot(prices$vol_engine,prices$price, ylab="Price in USD", xlab="Engine Volume",main="Scatterplot  Price vs Engine Volume")
+```
+```{r}
+cordata= prices[,c(4,5,6,10)]
+corMat=cor(cordata,method="spearman") 
+print(round(corMat,3))
+#unique(prices$model)
+corrplot(corMat, method="number", type="upper", diag=FALSE)
+```
+
+```{r}
+summary(prices$price)
+hist(prices$price,xlab = "Price", main="Histogram of Price",breaks = 200)
+hist(log(prices$price),xlab = "log(Price)", main="Histogram of log(Price)",breaks = 200)
+prices$exp[prices$price>19228] <- "Expensive"
+prices$exp[4830>prices$price] <- "Cheap"
+#prices$exp[19228>prices$price && prices$price>4830] <- "Average"
+prices$exp = as.factor(prices$exp)
+prices$exp  = factor(prices$exp, levels=c("Cheap", "Average", "Expensive"))
+plot(prices$exp, main="Binning of Price", xlab="Category of Price", ylab="Frequence")
+
+```
+
+
+
+
