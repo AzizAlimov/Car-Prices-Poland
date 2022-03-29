@@ -19,6 +19,29 @@ dat_filtered = dat %>%
 
 dat_filtered = dat_filtered %>% group_by(province) %>% filter(n() >= 50) %>% ungroup() %>% as.data.frame()
 table(dat_filtered$province)
+table(dat_filtered$city)
+
+dat_filtered$province[dat_filtered$city == "Warszawa"] = "Warszawa"
+table(dat_filtered$province)
+
+dat_filtered[,gdpc] = NA
+dat_filtered$gdpc[dat_filtered$province == "Warszawa"] = 133.37
+dat_filtered$gdpc[dat_filtered$province == "Zachodniopomorskie"] = 50.7
+dat_filtered$gdpc[dat_filtered$province == "Wielkopolskie"] = 66.21
+dat_filtered$gdpc[dat_filtered$province == "Warmińsko-mazurskie"] = 42.57
+dat_filtered$gdpc[dat_filtered$province == "Świętokrzyskie"] = 43.65
+dat_filtered$gdpc[dat_filtered$province == "Śląskie"] = 60.09
+dat_filtered$gdpc[dat_filtered$province == "Pomorskie"] = 57.67
+dat_filtered$gdpc[dat_filtered$province == "Podlaskie"] = 44.52
+dat_filtered$gdpc[dat_filtered$province == "Podkarpackie"] = 41.94
+dat_filtered$gdpc[dat_filtered$province == "Opolskie"] = 47.72
+dat_filtered$gdpc[dat_filtered$province == "Mazowieckie"] = 51.63
+dat_filtered$gdpc[dat_filtered$province == "Małopolskie"] = 55.45
+dat_filtered$gdpc[dat_filtered$province == "Lubuskie"] = 49.39
+dat_filtered$gdpc[dat_filtered$province == "Lubelskie"] = 41.32
+dat_filtered$gdpc[dat_filtered$province == "Łódzkie"] = 58.84
+dat_filtered$gdpc[dat_filtered$province == "Kujawsko-pomorskie"] = 49.44
+dat_filtered$gdpc[dat_filtered$province == "Dolnośląskie"] = 67.15
 
 plt = ggplot(dat_filtered) +
   geom_bar(aes(x = forcats::fct_infreq(model)))
@@ -142,4 +165,4 @@ subset_selected = selectLess(subset)
 save(file="data/car_prices_subset.RData", subset)
 save(file="data/car_prices_subset_all.RData", subset_selected)
 
-
+table(dat_processed$province)
