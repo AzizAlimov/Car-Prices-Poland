@@ -43,6 +43,8 @@ dat_filtered$gdpc[dat_filtered$province == "Łódzkie"] = 58.84
 dat_filtered$gdpc[dat_filtered$province == "Kujawsko-pomorskie"] = 49.44
 dat_filtered$gdpc[dat_filtered$province == "Dolnośląskie"] = 67.15
 
+sum(is.na(dat_filtered$gdpc))
+
 plt = ggplot(dat_filtered) +
   geom_bar(aes(x = forcats::fct_infreq(model)))
 
@@ -129,7 +131,7 @@ myTransform0 = function(dataset)
     dplyr::mutate( log_vol_engine=log(vol_engine+1000),
                     mileage_cat=cut(mileage, mileage_breaks)) %>%
     dplyr::select( price, mark, mark_model, mark_cat, year, mileage, mileage_cat,
-                   vol_engine, log_vol_engine, province, fuel, car_type)
+                   vol_engine, log_vol_engine, province, fuel, car_type, gdpc)
   dataTransform
 }
 
@@ -145,7 +147,7 @@ selectLess = function(dataset)
 { 
   dataTransform= as_tibble(dataset) %>%
     dplyr::select( price, mark_cat, year, mileage_cat,
-                  log_vol_engine, province, fuel, car_type)
+                  log_vol_engine, fuel, car_type, gdpc)
   dataTransform
 }
 
@@ -165,4 +167,4 @@ subset_selected = selectLess(subset)
 save(file="data/car_prices_subset.RData", subset)
 save(file="data/car_prices_subset_all.RData", subset_selected)
 
-table(dat_processed$province)
+table(subset$province)
