@@ -131,7 +131,15 @@ dat_selected = selectLess(dat_processed)
 save(file="data/car_prices_transformed_all.RData", dat_processed)
 save(file="data/car_prices_transformed.RData", dat_selected)
 
+set.seed(123)
+nn = nrow(dat_selected)
+nsubset = 12000
+isubset = sample(nn, nsubset)
+subset = dat_processed[isubset,]
 
+subset_selected = selectLess(subset)
 
+save(file="data/car_prices_subset.RData", subset)
+save(file="data/car_prices_subset_all.RData", subset_selected)
 
 
