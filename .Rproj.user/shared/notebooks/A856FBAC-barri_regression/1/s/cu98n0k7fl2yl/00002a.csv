@@ -14,4 +14,4 @@
 "0","imiss = which(ilow | ihigh)"
 "0","list(summary=summ, imiss=imiss)"
 "0","}"
-"0","#x = crossValidationCont(train,3,0.5,6)"
+"0","x = crossValidationCont(train,3,0.5,6)"

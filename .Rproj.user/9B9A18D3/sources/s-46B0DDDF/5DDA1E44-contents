@@ -43,25 +43,26 @@ crossValidationCont = function(df,K,a,nperfmeas=6)
   nhold = round(n/K) # size of holdout set 
   iperm = sample(n)
   perfmeas = matrix(0,K,nperfmeas)  
+  models = vector(mode="list", length=3)
   for(k in 1:K)
   { indices = (((k-1)*nhold+1):(k*nhold))
     if( k==K ) indices = (((k-1)*nhold+1):n)
     indices = iperm[indices]
     train = df[-indices,]
     holdout = df[indices,]
-    obj = lm(price~mark_cat+year+mileage_cat+log_vol_engine+fuel+car_type+gdpc,data=df)
-    pred = predict(obj,newdata=holdout,interval="prediction",level=a)
-    RSS = c(crossprod(obj$residuals))
-    MSE = RSS / length(obj$residuals)
+    models[[k]] = lm(price~mark_cat+year+mileage_cat+log_vol_engine+fuel+car_type+gdpc,data=train)
+    pred = predict(models[[k]],newdata=holdout,interval="prediction",level=a)
+    RSS = c(crossprod(models[[k]]$residuals))
+    MSE = RSS / length(models[[k]]$residuals)
     x = intervalScore(pred, holdout$price, a)
     y= sqrt(MSE)
-    z = summary(obj)$r.squared
+    z = summary(models[[k]])$r.squared
     perfmeas[k,1:4] = x$summary
     perfmeas[k,5] = y
     perfmeas[k,6] = z
   }
   avgperfmeas = apply(perfmeas,2,mean)
-  list(perfmeasbyfold=perfmeas, avgperfmeas=avgperfmeas)
+  list(perfmeasbyfold=perfmeas, avgperfmeas=avgperfmeas, models= models)
 }
 ```
 
@@ -82,7 +83,7 @@ summ = c(level,avglength,IS,cover)
 imiss = which(ilow | ihigh)
 list(summary=summ, imiss=imiss)
 }
-#x = crossValidationCont(train,3,0.5,6)
+x = crossValidationCont(train,3,0.5,6)
 ```
 
 

@@ -1,0 +1,204 @@
+---
+title: "STAT 443 Assignment 3"
+author: "Barrichello Noor (68448711)"
+date: "3/23/2022"
+output:
+  pdf_document: default
+  pdf_notebook: default
+---
+```{r}
+library(knitr)
+library(tseries)
+library(zoo)
+```
+
+
+(1)
+(a)
+From the acf, we can clearly see that there is seasonality with a period of 12. We can also see that the pacf starts of negative then decays slowly. From the plot, there does not seem to be any clear trend, and the amplitude stays roughly the same.
+```{r}
+rimouski <- read.csv("~/Downloads/rimouski.csv")
+rimouski <- rimouski[,-1]
+rimouski.ts <- ts(rimouski$Mean.Max.Temp, start = c(1954,1), frequency = 12)
+rimouski.train <- window(rimouski.ts, end = c(2010, 12))
+rimouski.test <- window(rimouski.ts, start = c(2011, 1))
+plot(rimouski.train)
+acf(rimouski.train, lag.max = 60)
+pacf(rimouski.train, lag.max = 60)
+```
+
+(b)
+```{r}
+rimouski.model <- arima(rimouski.train, seasonal = list(order=c(0,1,0), period = 12))
+```
+(i)
+$$\nabla_{12} X_t=Z_t$$
+$$X_t-X_{t-12}=Z_t,ARMA(12,0)$$
+(ii)
+```{r}
+rimouski.model
+```
+$$\nabla_{12} X_t=Z_t$$
+$$Z_t - N(0,6.122)$$
+(iii)
+From the plot, there does not seem to be any clear trend or seasonality. From the acf majority have an acf of 0, although the acf at lag 1 is moderately strong and negative. From the pacf, we can see that there is a trend that slowly decays of the pacf at whole numbered lags, they are negative and decays slowly.
+```{r}
+plot(rimouski.model$residuals)
+acf(rimouski.model$residuals, lag.max = 60)
+pacf(rimouski.model$residuals, lag.max = 60)
+```
+
+(c)
+(i)
+We can see from the acf that after lag 1, lag 2 cuts off, so after a seasonal period the acf cuts off, and the pacf after a season period slowly decays, tails off indicating a seasonal MA(1).
+
+(ii)
+$$\nabla_{12} X_t=(1+\beta B^{12})Z_t$$
+$$X_t-X_{t-12}=Z_t+\beta Z_{t-12}$$
+$$X_t=X_{t-12}+Z_t+\beta Z_{t-12}, ARMA(12,12)$$
+
+(iii)
+```{r}
+rimouski.model2 <- arima(rimouski.train, seasonal = list(order=c(0,1,1), period = 12))
+rimouski.model2
+```
+$$\nabla_{12} X_t=(1-0.9206B^{12})Z_t$$
+$$Z_t - N(0,3.4)$$
+(iv)
+Model 1 (b) AIC=3126.62
+Model 2 (c) AIC=2755.96
+We would choose model 2 (b) as it has a lower AIC than model 1(a)
+
+(d)
+(i)
+AR(1) seems to be a reasonable choice here with the acf showing no pattern and the sample pacf "cutting-off" sharply at lag 1.
+```{r}
+acf(rimouski.model2$residuals)
+pacf(rimouski.model2$residuals)
+```
+
+
+(ii)
+$$(1-\alpha B)\nabla_{12} X_t=(1+\beta B^{12})Z_t$$
+$$(1-\alpha B)X_t-X_{t-12}=(1+\beta B^{12})Z_t$$
+$$(1-\alpha B)(X_t-X_{t-12})=Z_t+\beta Z_{t-12}$$
+$$X_t-\alpha X_{t-1}-X_{t-12}+\alpha X_{t-13}=Z_t+\beta Z_{t-12}$$
+$$X_t-\alpha X_{t-1}-X_{t-12}-\alpha X_{t-13}=Z_t+\beta Z_{t-12},ARMA(13,12)$$
+(iii)
+```{r}
+rimouski.model3 <- arima(rimouski.train, order = c(1,0,0), seasonal = list(order=c(0,1,1), period = 12))
+rimouski.model3
+```
+$$(1+0.1808B)\nabla_{12} X_t=(1-0.9354B^{12})Z_t$$
+$$Z_t - N(0,3.281)$$
+(iv)
+The standardized residuals does not show any patterns and the acf of residuals are not significant. The p-values for lags 1 and 2 are above 0.05 however the others are around or below it. Thus, it is an adequate model however, improvements can be made as shown by the p-values
+```{r}
+tsdiag(rimouski.model3)
+```
+(v)
+Model 2 (b) AIC=2755.96
+
+Model 3 (c) AIC=2736.43
+
+Yes, the AIC for the current model is lower, than the AIC from the previous model, indicating we have improved on it.
+
+(e)
+The predictions are reasonable however, we can see that the predictions did not get the peaks(maximum) and valleys(minimum) quite right, everything in between is pretty similar. Overall it is adequate. 
+```{r}
+p = predict(rimouski.model3, n.ahead = 12*6)
+plot(p$pred, ylab="Monthly Mean Max Temperature", main="Predicted vs Actual Monthly Mean Max Temperature from 2011-2016")
+lines(rimouski.test, col="red")
+legend("topleft", legend=c("Actual","Predicted"),col=c("red", "black"), lty=1, cex=0.8)
+```
+
+(f)
+```{r}
+rimouski.holt = HoltWinters(rimouski.train, seasonal = "additive")
+plot(rimouski.holt$fitted)
+```
+
+(i)
+No, the trend components are very small indicating there a very small or close to no/0 trend.
+
+(ii)
+From eyeballing, the two methods performed very similarly and no definite conclusion can be said from just the plot. A thing to note however is that we can see that the holt model tends to have a higher valley(minimum) and higher peak(maximum), this is cearly seen in 2014 and 2015.
+```{r}
+p.holt = predict(rimouski.holt, n.ahead = 12*6)
+plot(p$pred, ylab="Monthly Mean Max Temperature", main="Predicted vs Actual Monthly Mean Max Temperature from 2011-2016")
+lines(rimouski.test, col="red")
+lines(p.holt, col="blue")
+legend("topleft", legend=c("Actual","Box-Jenkins", "Holt"),col=c("red", "black", "blue"), lty=1, cex=0.8)
+```
+(iii)
+Box Jenkins MSPE = 3.832878
+
+Holt MSPE = 4.496152
+
+From the MSPE we can see that the box jenkins model performed better as it is lower, closer to the predictions.
+```{r}
+mspe.holt <- sum((rimouski.test-p.holt)^2)/(12*6)
+mspe.holt
+mspe.box <- sum((rimouski.test-p$pred)^2)/(12*6)
+mspe.box
+```
+
+(2)
+(a)
+From the plots, there is no clear seasonal pattern and trend. However we can see a negative trend from mid 2021 onwards. We can see that the acf decays very slowly. The pacf cuts off after lag 1.
+```{r}
+bynd <- read.table("~/Downloads/bynd.txt", quote="\"", comment.char="")
+bynd.zoo <- zoo(x = bynd$V2, order.by = strptime(bynd$V1,"%Y-%m-%d"))
+bynd.ts <- ts(bynd.zoo)
+plot(bynd.zoo)
+acf(bynd.ts)
+pacf(bynd.ts)
+```
+
+(b)
+Yes, the difference model appears stationary as there is no clear trend or seasonality. Also there is no major acf, they are all close to 0, and the pacf are all very small.
+```{r}
+bynd.diff <- c(bynd[-1,]$V2 - bynd[-nrow(bynd),]$V2)
+bynd.diff.ts <- ts(bynd.diff)
+plot(bynd.diff.ts)
+acf(bynd.diff.ts)
+pacf(bynd.diff.ts)
+```
+(c)
+From the original data, the acf decays indicating an AR model, the pacf cuts off after lag 1, suggestinng AR(1).
+
+(d)
+ARMA(1,0,0)
+
+(e)
+```{r}
+bynd.model <- arima(bynd$V2, order = c(1,0,0), include.mean = TRUE)
+bynd.model
+```
+$$\sigma^2=35.79$$
+
+
+(f)
+$$\hat{X_n}(N,l)=(-0.9881)^lX(N)$$
+
+(g)
+```{r}
+knitr::include_graphics("~/Downloads/PI.pdf")
+```
+
+$$PI=\hat{X_n}(N,l)\pm (1.645)(5.982474)\sqrt{\frac{1-0.9881^{2l}}{1-0.9881^{2}}}$$
+```{r}
+pred = predict(bynd.model, n.ahead=7)
+pred
+pred$pred[7] + pred$se[7] * qnorm(0.95)
+pred$pred[7] - pred$se[7] * qnorm(0.95)
+```
+Point prediction = 51.47142
+
+Prediction interval = (26.34263, 76.60021)
+
+(h)
+Based on the model, there is a trend going down, indicating that prices are going to be lower and his shares and going to decrease in value. The prediction interval is also quite large indicating uncertainty. However, the model should not be his only factor in deciding whether selling share as market and stock sentiment was not taken into account in the model and other personal/world factors.
+
+
+
