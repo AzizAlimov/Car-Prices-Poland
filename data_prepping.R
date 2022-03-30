@@ -164,7 +164,9 @@ subset = dat_processed[isubset,]
 
 subset_selected = selectLess(subset)
 
-save(file="data/car_prices_subset.RData", subset)
-save(file="data/car_prices_subset_all.RData", subset_selected)
+save(file="data/car_prices_subset.RData", subset_selected)
+save(file="data/car_prices_subset_all.RData", subset)
+
+hist((subset$price))
 
 table(subset$province)
