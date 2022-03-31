@@ -1,0 +1,27 @@
+{
+    "id": "5DDA1E44",
+    "path": "~/Car-Prices-Poland/barri_regression.Rmd",
+    "project_path": "barri_regression.Rmd",
+    "type": "r_markdown",
+    "hash": "3074520760",
+    "contents": "",
+    "dirty": false,
+    "created": 1648594989991.0,
+    "source_on_save": false,
+    "relative_order": 2,
+    "properties": {
+        "tempName": "Untitled1",
+        "chunk_output_type": "inline",
+        "cursorPosition": "192,6",
+        "scrollLine": "191",
+        "last_setup_crc32": "46B0DDDFb79faf19"
+    },
+    "folds": "",
+    "lastKnownWriteTime": 1648685847,
+    "encoding": "UTF-8",
+    "collab_server": "",
+    "source_window": "",
+    "last_content_update": 1648685847522,
+    "read_only": false,
+    "read_only_alternatives": []
+}

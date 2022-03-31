@@ -185,15 +185,26 @@ z=sqrtz^2
 w=1/z # weight functions for WLS
 wTrain=w[trainIndex]
 wHoldo=w[-trainIndex] 
-WLSTrain=lm(price~mark_cat+year+mileage_cat+log_vol_engine+fuel+car_type+gdpc,data=train, weights = sqrt(mileage)/sqrt(year))
+WLSTrain=lm(price~mark_cat+year+mileage_cat+log_vol_engine+fuel+car_type+gdpc,data=train, weights = 1/(year)^2)
 plot(WLSTrain$fitted.values, WLSTrain$residuals)
-plot(train$price, model_normal_variables$residuals)
+plot(train$year, model_normal_variables$residuals, ylab="Residuals",xlab="Year")
+```
+
+```{r}
+modelc_pred_5=predict(WLSTrain,newdata=holdout,interval="prediction",level=0.5, weights = 1/(holdout$year)^2)
+modelc_pred_8=predict(WLSTrain,newdata=holdout,interval="prediction",level=0.8, weights = 1/(holdout$year)^2)
+ISOLS50=intervalScore(modelc_pred_5,holdout$price,0.5)
+ISOLS80=intervalScore(modelc_pred_8,holdout$price,0.8)
+out_modelc=rbind(ISOLS50$summary,ISOLS80$summary)
+colnames(out_modelc)=c("level","avgleng","IS","cover")
+out_modelc
 ```
 
 
+
 ```{r}
-modelc_pred_5=predict(WLSTrain,newdata=holdout,interval="prediction",level=0.5, weights = wHoldo)
-modelc_pred_8=predict(WLSTrain,newdata=holdout,interval="prediction",level=0.8, weights = wHoldo)
+modelc_pred_5=predict(model_chosen_variables,newdata=holdout,interval="prediction",level=0.5)
+modelc_pred_8=predict(model_chosen_variables,newdata=holdout,interval="prediction",level=0.8)
 ISOLS50=intervalScore(modelc_pred_5,holdout$price,0.5)
 ISOLS80=intervalScore(modelc_pred_8,holdout$price,0.8)
 out_modelc=rbind(ISOLS50$summary,ISOLS80$summary)

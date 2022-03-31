@@ -1,5 +1,0 @@
-"0","modelc_pred_5=predict(model_chosen_variables,newdata=holdout,interval=""prediction"",level=0.5)"
-"0","modelc_pred_8=predict(model_chosen_variables,newdata=holdout,interval=""prediction"",level=0.8)"
-"0","ISOLS50=intervalScore(modelc_pred_5,holdout$price,0.5)"
-"2","Error: $ operator is invalid for atomic vectors
-"

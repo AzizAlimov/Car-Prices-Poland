@@ -1,1 +1,0 @@
-"0","plot(train$price, model_normal_variables$residuals)"

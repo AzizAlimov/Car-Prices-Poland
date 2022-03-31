@@ -1,1 +1,0 @@
-{"frames":[{"func":"intervalScore(modelc_pred_5, holdout$price, 0.5)","file":"","line_number":0,"end_line_number":0,"character_number":0,"end_character_number":0},{"func":"crossprod(predObj$residuals)","file":"","line_number":12,"end_line_number":12,"character_number":1,"end_character_number":38}],"message":"Error: $ operator is invalid for atomic vectors\n"}
