@@ -96,7 +96,11 @@ crossValidationCont = function(df,K,nperfmeas=10,seed,lgb_params)
   
   results = c(is50_results$summ, is80_results$summ, r2, rmse)
   
-  lgb.importance(lgb_model)
+  model_importance = lgb.importance(lgb_model, percentage = TRUE)
+  lgb.plot.importance(model_importance, measure="Gain")
+  
+  resids_holdout = (holdout_labels-holdout_pred)
+  plot(holdout_pred, resids_holdout)
   
   print(results)
   

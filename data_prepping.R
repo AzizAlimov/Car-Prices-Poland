@@ -104,8 +104,8 @@ table(dat_filtered$car_type)
 
 
 
-
-hist(log(dat_filtered$vol_engine+1000), main ="Histogram of Engine Volume", xlab = "Engine Volume")
+hist(dat_filtered$vol_engine, main ="Histogram of Engine Volume", xlab = "Engine Volume")
+hist(log(dat_filtered$vol_engine+1000), main ="Histogram of Log(Engine Volume+1000)", xlab = "log(Engine Volume+1000)")
 summary(log(dat_filtered$vol_engine+1000))
 
 
@@ -170,3 +170,7 @@ save(file="data/car_prices_subset_all.RData", subset)
 hist((subset$price))
 
 table(subset$province)
+table(subset$mark_cat)
+table(subset$car_type)
+
+summary(subset$gdpc)
