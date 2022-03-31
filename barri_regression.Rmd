@@ -44,25 +44,64 @@ crossValidationCont = function(df,K,a,nperfmeas=6)
   iperm = sample(n)
   perfmeas = matrix(0,K,nperfmeas)  
   models = vector(mode="list", length=3)
+  year = vector(mode="list", length=3)
   for(k in 1:K)
   { indices = (((k-1)*nhold+1):(k*nhold))
     if( k==K ) indices = (((k-1)*nhold+1):n)
     indices = iperm[indices]
-    train = df[-indices,]
-    holdout = df[indices,]
-    models[[k]] = lm(price~mark_cat+year+mileage_cat+log_vol_engine+fuel+car_type+gdpc,data=train)
-    pred = predict(models[[k]],newdata=holdout,interval="prediction",level=a)
+    traine = df[-indices,]
+    holdoute = df[indices,]
+    models[[k]] = lm(price~mark_cat+year+mileage_cat+log_vol_engine+fuel+car_type+gdpc,data=traine)
+    pred = predict(models[[k]],newdata=holdoute,interval="prediction",level=a)
     RSS = c(crossprod(models[[k]]$residuals))
     MSE = RSS / length(models[[k]]$residuals)
-    x = intervalScore(pred, holdout$price, a)
+    x = intervalScore(pred, holdoute$price, a)
     y= sqrt(MSE)
     z = summary(models[[k]])$r.squared
     perfmeas[k,1:4] = x$summary
     perfmeas[k,5] = y
     perfmeas[k,6] = z
+    year[[k]] = traine$year
   }
   avgperfmeas = apply(perfmeas,2,mean)
-  list(perfmeasbyfold=perfmeas, avgperfmeas=avgperfmeas, models= models)
+  list(perfmeasbyfold=perfmeas, avgperfmeas=avgperfmeas, models= models, year= year)
+}
+```
+
+```{r}
+crossValidationCont2 = function(df,K,a,nperfmeas=6)
+{ set.seed(123)
+  n = nrow(df)
+  nhold = round(n/K) # size of holdout set 
+  iperm = sample(n)
+  perfmeas = matrix(0,K,nperfmeas)  
+  models = vector(mode="list", length=3)
+  year = vector(mode="list", length=3)
+  predi = vector(mode="list", length=3)
+  pri = vector(mode="list", length=3)
+  for(k in 1:K)
+  { indices = (((k-1)*nhold+1):(k*nhold))
+    if( k==K ) indices = (((k-1)*nhold+1):n)
+    indices = iperm[indices]
+    traine = df[-indices,]
+    holdoute = df[indices,]
+    models[[k]] = lm(price~mark_cat+year+mileage_cat+log_vol_engine+fuel+car_type+gdpc,data=traine, weights = 1/(traine$year)^2)
+    pred = predict(models[[k]],newdata=holdoute,interval="prediction",level=a, weights = 1/(holdoute$year)^2)
+    RSS = c(crossprod(models[[k]]$residuals))
+    MSE = RSS / length(models[[k]]$residuals)
+    x = intervalScore(pred, holdoute$price, a)
+    y= sqrt(MSE)
+    z = summary(models[[k]])$r.squared
+    perfmeas[k,1:4] = x$summary
+    perfmeas[k,5] = y
+    perfmeas[k,6] = z
+    year[[k]] = traine$year
+    predi[[k]] = pred
+    pri[[k]] = holdoute$price
+    ols_step_best_subset( models[[k]])
+  }
+  avgperfmeas = apply(perfmeas,2,mean)
+  list(perfmeasbyfold=perfmeas, avgperfmeas=avgperfmeas, models= models, year= year, pred = predi, price = pri)
 }
 ```
 
@@ -84,6 +123,7 @@ imiss = which(ilow | ihigh)
 list(summary=summ, imiss=imiss)
 }
 x = crossValidationCont(train,3,0.5,6)
+y = crossValidationCont2(train,3,0.5,6)
 ```
 
 
