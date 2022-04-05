@@ -86,7 +86,7 @@ crossValidationCont2 = function(df,K,a,nperfmeas=6)
     year[[k]] = traine$year
     predi[[k]] = pred
     pri[[k]] = holdoute$price
-    ols_step_best_subset( models[[k]])
+    #ols_step_best_subset( models[[k]])
   }
   avgperfmeas = apply(perfmeas,2,mean)
   list(perfmeasbyfold=perfmeas, avgperfmeas=avgperfmeas, models= models, year= year, pred = predi, price = pri)
@@ -111,9 +111,8 @@ crossValidationCont3 = function(df,K,a,nperfmeas=6)
     traine = df[-indices,]
     holdoute = df[indices,]
     models[[k]] = lm(I(log(price))~mark_cat+year+mileage_cat+log_vol_engine+fuel+car_type,data=traine)
-    pred1 = predict(models[[k]],newdata=z,interval="prediction",level=a)
+    pred1 = predict(models[[k]],newdata=holdoute,interval="prediction",level=a)
     pred = exp(pred1)
-    res1 = trainpred
     RSS = c(crossprod(models[[k]]$residuals))
     MSE = RSS / length(models[[k]]$residuals)
     x = intervalScore(pred, holdoute$price, a)
@@ -152,6 +151,8 @@ x = crossValidationCont(train,3,0.5,6)
 y = crossValidationCont2(train,3,0.5,6)
 z = crossValidationCont3(train,3,0.5,6)
 ```
+
+
 
 
 
