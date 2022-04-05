@@ -124,6 +124,7 @@ list(summary=summ, imiss=imiss)
 }
 x = crossValidationCont(train,3,0.5,6)
 y = crossValidationCont2(train,3,0.5,6)
+z = crossValidationCont3(train,3,0.5,6)
 ```
 
 
