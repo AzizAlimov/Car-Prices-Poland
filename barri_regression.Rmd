@@ -126,7 +126,7 @@ crossValidationCont3 = function(df,K,a,nperfmeas=6)
     pri[[k]] = holdoute$price
   }
   avgperfmeas = apply(perfmeas,2,mean)
-  list(perfmeasbyfold=perfmeas, avgperfmeas=avgperfmeas, models= models, year= year, pred = predi)
+  list(perfmeasbyfold=perfmeas, avgperfmeas=avgperfmeas, models= models, year= year, pred = predi, price = pri)
 }
 ```
 
@@ -151,6 +151,35 @@ x = crossValidationCont(train,3,0.5,6)
 y = crossValidationCont2(train,3,0.5,6)
 z = crossValidationCont3(train,3,0.5,6)
 ```
+
+```{r}
+plot(x$models[[1]]$fitted.values,x$models[[1]]$residuals)
+plot(x$models[[2]]$fitted.values,x$models[[2]]$residuals)
+plot(x$models[[3]]$fitted.values,x$models[[3]]$residuals)
+```
+
+```{r}
+plot(x$year[[1]],x$models[[1]]$residuals)
+plot(x$year[[2]],x$models[[2]]$residuals)
+plot(x$year[[3]],x$models[[3]]$residuals)
+```
+
+```{r}
+plot(y$models[[1]]$fitted.values,y$models[[1]]$residuals)
+plot(y$models[[2]]$fitted.values,y$models[[2]]$residuals)
+plot(y$models[[3]]$fitted.values,y$models[[3]]$residuals)
+```
+
+```{r}
+res1 = z$price[[1]]  - exp(z$models[[1]]$fitted.values)
+res2 = z$price[[2]]  - exp(z$models[[2]]$fitted.values)
+res3 = z$price[[3]]  - exp(z$models[[3]]$fitted.values)
+plot(exp(z$models[[1]]$fitted.values),res1)
+plot(exp(z$models[[2]]$fitted.values),res2)
+plot(exp(z$models[[3]]$fitted.values),res3)
+```
+
+
 
 
 
