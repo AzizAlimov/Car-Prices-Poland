@@ -169,6 +169,11 @@ plot(y$models[[1]]$fitted.values,y$models[[1]]$residuals)
 plot(y$models[[2]]$fitted.values,y$models[[2]]$residuals)
 plot(y$models[[3]]$fitted.values,y$models[[3]]$residuals)
 ```
+```{r}
+plot(z$models[[1]]$fitted.values,z$models[[1]]$residuals)
+plot(z$models[[2]]$fitted.values,z$models[[2]]$residuals)
+plot(z$models[[3]]$fitted.values,z$models[[3]]$residuals)
+```
 
 ```{r}
 res1 = z$price[[1]]  - exp(z$models[[1]]$fitted.values)
@@ -178,20 +183,3 @@ plot(exp(z$models[[1]]$fitted.values),res1)
 plot(exp(z$models[[2]]$fitted.values),res2)
 plot(exp(z$models[[3]]$fitted.values),res3)
 ```
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
