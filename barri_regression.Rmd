@@ -1,0 +1,270 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+# Setup
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(mlbench)
+library(randomForest)
+library(party)
+library(rpart)
+library(rpart.plot)
+library(leaps)
+library(olsrr)
+library(magrittr)
+library(tibble)
+```
+
+# Data Work After Running data_prep
+```{r, echo=TRUE}
+vol_engine_breaks = c(-Inf, 1250,1500, 1750, 1950, Inf) #Not done
+myTransform1 = function(dataset,vol_engine_breaks) #Add some columns for playing around
+{ 
+  dataTransform= as_tibble(dataset) %>%
+    dplyr::mutate( log_price = log(price),
+                   sqrt_mileage = sqrt(mileage),
+                   vol_engine_cat = cut(vol_engine, vol_engine_breaks)) %>%
+    dplyr::select(price, log_price, mark, mark_model, mark_cat, year, mileage, sqrt_mileage, mileage_cat, vol_engine, log_vol_engine, vol_engine_cat, province, fuel, car_type, gdpc)
+  dataTransform
+}
+subset_trial = myTransform1(subset,vol_engine_breaks)
+n <- nrow(subset_trial)
+set.seed(123)
+trainIndex <- sample(n,10000)
+train <- subset_trial[trainIndex,]
+holdout <- subset_trial[-trainIndex,]
+```
+
+```{r}
+crossValidationCont = function(df,K,a,nperfmeas=6)
+{ set.seed(123)
+  n = nrow(df)
+  nhold = round(n/K) # size of holdout set 
+  iperm = sample(n)
+  perfmeas = matrix(0,K,nperfmeas)  
+  models = vector(mode="list", length=3)
+  year = vector(mode="list", length=3)
+  for(k in 1:K)
+  { indices = (((k-1)*nhold+1):(k*nhold))
+    if( k==K ) indices = (((k-1)*nhold+1):n)
+    indices = iperm[indices]
+    traine = df[-indices,]
+    holdoute = df[indices,]
+    models[[k]] = lm(price~mark_cat+year+mileage_cat+log_vol_engine+fuel+car_type+gdpc,data=traine)
+    pred = predict(models[[k]],newdata=holdoute,interval="prediction",level=a)
+    RSS = c(crossprod(models[[k]]$residuals))
+    MSE = RSS / length(models[[k]]$residuals)
+    x = intervalScore(pred, holdoute$price, a)
+    y= sqrt(MSE)
+    z = summary(models[[k]])$r.squared
+    perfmeas[k,1:4] = x$summary
+    perfmeas[k,5] = y
+    perfmeas[k,6] = z
+    year[[k]] = traine$year
+  }
+  avgperfmeas = apply(perfmeas,2,mean)
+  list(perfmeasbyfold=perfmeas, avgperfmeas=avgperfmeas, models= models, year= year)
+}
+```
+
+```{r}
+crossValidationCont2 = function(df,K,a,nperfmeas=6)
+{ set.seed(123)
+  n = nrow(df)
+  nhold = round(n/K) # size of holdout set 
+  iperm = sample(n)
+  perfmeas = matrix(0,K,nperfmeas)  
+  models = vector(mode="list", length=3)
+  year = vector(mode="list", length=3)
+  predi = vector(mode="list", length=3)
+  pri = vector(mode="list", length=3)
+  for(k in 1:K)
+  { indices = (((k-1)*nhold+1):(k*nhold))
+    if( k==K ) indices = (((k-1)*nhold+1):n)
+    indices = iperm[indices]
+    traine = df[-indices,]
+    holdoute = df[indices,]
+    models[[k]] = lm(price~mark_cat+year+mileage_cat+log_vol_engine+fuel+car_type+gdpc,data=traine, weights = 1/(traine$year)^2)
+    pred = predict(models[[k]],newdata=holdoute,interval="prediction",level=a, weights = 1/(holdoute$year)^2)
+    RSS = c(crossprod(models[[k]]$residuals))
+    MSE = RSS / length(models[[k]]$residuals)
+    x = intervalScore(pred, holdoute$price, a)
+    y= sqrt(MSE)
+    z = summary(models[[k]])$r.squared
+    perfmeas[k,1:4] = x$summary
+    perfmeas[k,5] = y
+    perfmeas[k,6] = z
+    year[[k]] = traine$year
+    predi[[k]] = pred
+    pri[[k]] = holdoute$price
+    ols_step_best_subset( models[[k]])
+  }
+  avgperfmeas = apply(perfmeas,2,mean)
+  list(perfmeasbyfold=perfmeas, avgperfmeas=avgperfmeas, models= models, year= year, pred = predi, price = pri)
+}
+```
+
+```{r}
+intervalScore = function(predObj,actual,level) { 
+n = nrow(predObj)
+alpha = 1-level
+ilow = (actual<predObj[,2]) # overestimation
+ihigh = (actual>predObj[,3]) # underestimation
+sumlength = sum(predObj[,3]-predObj[,2]) # sum of lengths of prediction intervals 
+sumlow = sum(predObj[ilow,2]-actual[ilow])*2/alpha
+sumhigh = sum(actual[ihigh]-predObj[ihigh,3])*2/alpha
+avglength = sumlength/n
+IS = (sumlength+sumlow+sumhigh)/n # average length + average under/over penalties 
+cover = mean(actual>= predObj[,2] & actual<=predObj[,3])
+summ = c(level,avglength,IS,cover)
+# summary with level, average length, interval score, coverage rate, r^2, rmse
+imiss = which(ilow | ihigh)
+list(summary=summ, imiss=imiss)
+}
+x = crossValidationCont(train,3,0.5,6)
+y = crossValidationCont2(train,3,0.5,6)
+z = crossValidationCont3(train,3,0.5,6)
+```
+
+
+```{r}
+model_chosen_variables = lm(price~mark_cat+year+mileage_cat+log_vol_engine+fuel+car_type+gdpc,data=train) #subset_selected
+model_normal_variables = lm(price~mark_cat+year+mileage+vol_engine+fuel+car_type+gdpc,data=train) #subset_selected without transformation/bining
+#model_categorical_variables = lm(price~mark,data=train)
+model_transform_variables = lm(price~mark_cat+year+sqrt_mileage+log_vol_engine+fuel+car_type+gdpc,data=train) #subset_selected, sqrt mileage instead of bining
+model_original_variables = lm(price~mark+year+mileage+vol_engine+fuel+car_type+province,data=train) #original data from kaggle not transform
+model3 = lm(price~mark_cat+year+sqrt_mileage+log_vol_engine+fuel+car_type+province,data=train)
+model4 = lm(log_price~mark_cat+year+sqrt_mileage+log_vol_engine+fuel+car_type+province,data=train)
+model5 = lm(log_price~mark_cat+year+sqrt_mileage+log_vol_engine+fuel+car_type+gdpc,data=train)
+#ols_step_best_subset(model_normal_variables) #Function to show best subsets and metrics
+#plot(subset_trial$vol_engine_cat)
+```
+Best AIC and Adj. R-Square is model_transform_variables, model with mileage being square rooted
+
+
+```{r}
+transform_pred_5=predict(model_transform_variables,newdata=holdout,interval="prediction",level=0.5)
+transform_pred_8=predict(model_transform_variables,newdata=holdout,interval="prediction",level=0.8)
+ISOLS50=intervalScore(transform_pred_5,holdout$price,0.5)
+ISOLS80=intervalScore(transform_pred_8,holdout$price,0.8)
+out_trans=rbind(ISOLS50$summary,ISOLS80$summary)
+colnames(out_trans)=c("level","avgleng","IS","cover")
+
+model5_pred_5=predict(model5,newdata=holdout,interval="prediction",level=0.5)
+model5_pred_8=predict(model5,newdata=holdout,interval="prediction",level=0.8)
+ISOLS50=intervalScore(model5_pred_5,holdout$log_price,0.5)
+ISOLS80=intervalScore(model5_pred_8,holdout$log_price,0.8)
+out_model5=rbind(ISOLS50$summary,ISOLS80$summary)
+colnames(out_model5)=c("level","avgleng","IS","cover")
+```
+
+```{r}
+modelc_pred_5=predict(model_chosen_variables,newdata=holdout,interval="prediction",level=0.5)
+modelc_pred_8=predict(model_chosen_variables,newdata=holdout,interval="prediction",level=0.8)
+ISOLS50=intervalScore(modelc_pred_5,holdout$price,0.5)
+ISOLS80=intervalScore(modelc_pred_8,holdout$price,0.8)
+out_modelc=rbind(ISOLS50$summary,ISOLS80$summary)
+colnames(out_modelc)=c("level","avgleng","IS","cover")
+out_modelc
+```
+
+```{r}
+modelc_pred_5=predict(model_normal_variables,newdata=holdout,interval="prediction",level=0.5)
+modelc_pred_8=predict(model_normal_variables,newdata=holdout,interval="prediction",level=0.8)
+ISOLS50=intervalScore(modelc_pred_5,holdout$price,0.5)
+ISOLS80=intervalScore(modelc_pred_8,holdout$price,0.8)
+out_modelc=rbind(ISOLS50$summary,ISOLS80$summary)
+colnames(out_modelc)=c("level","avgleng","IS","cover")
+out_modelc
+```
+
+```{r}
+modelc_pred_5=predict(model_transform_variables,newdata=holdout,interval="prediction",level=0.5)
+modelc_pred_8=predict(model_transform_variables,newdata=holdout,interval="prediction",level=0.8)
+ISOLS50=intervalScore(modelc_pred_5,holdout$price,0.5)
+ISOLS80=intervalScore(modelc_pred_8,holdout$price,0.8)
+out_modelc=rbind(ISOLS50$summary,ISOLS80$summary)
+colnames(out_modelc)=c("level","avgleng","IS","cover")
+out_modelc
+```
+
+```{r}
+modelc_pred_5=predict(model_original_variables,newdata=holdout,interval="prediction",level=0.5)
+modelc_pred_8=predict(model_original_variables,newdata=holdout,interval="prediction",level=0.8)
+ISOLS50=intervalScore(modelc_pred_5,holdout$price,0.5)
+ISOLS80=intervalScore(modelc_pred_8,holdout$price,0.8)
+out_modelc=rbind(ISOLS50$summary,ISOLS80$summary)
+colnames(out_modelc)=c("level","avgleng","IS","cover")
+out_modelc
+```
+
+```{r}
+modelc_pred_5=predict(model3,newdata=holdout,interval="prediction",level=0.5)
+modelc_pred_8=predict(model3,newdata=holdout,interval="prediction",level=0.8)
+ISOLS50=intervalScore(modelc_pred_5,holdout$price,0.5)
+ISOLS80=intervalScore(modelc_pred_8,holdout$price,0.8)
+out_modelc=rbind(ISOLS50$summary,ISOLS80$summary)
+colnames(out_modelc)=c("level","avgleng","IS","cover")
+out_modelc
+```
+
+```{r}
+SD1 = tapply(model_chosen_variables$resid,train$car_type, sd)
+print(SD1)
+SD2 = tapply(model_chosen_variables$resid,train$fuel, sd)
+print(SD2)
+n=nrow(subset_trial)
+```
+
+```{r}
+sqrtz=rep(1,n) 
+sqrtz[subset_trial$mark_cat=="Euro"]=0.1
+sqrtz[subset_trial$mark_cat=="US"]=0.1
+sqrtz[subset_trial$mark_cat=="Asia"]=0.1
+z=sqrtz^2
+w=1/z # weight functions for WLS
+wTrain=w[trainIndex]
+wHoldo=w[-trainIndex] 
+WLSTrain=lm(price~mark_cat+year+mileage_cat+log_vol_engine+fuel+car_type+gdpc,data=train, weights = 1/(year)^2)
+plot(WLSTrain$fitted.values, WLSTrain$residuals)
+plot(train$year, model_normal_variables$residuals, ylab="Residuals",xlab="Year")
+```
+
+```{r}
+modelc_pred_5=predict(WLSTrain,newdata=holdout,interval="prediction",level=0.5, weights = 1/(holdout$year)^2)
+modelc_pred_8=predict(WLSTrain,newdata=holdout,interval="prediction",level=0.8, weights = 1/(holdout$year)^2)
+ISOLS50=intervalScore(modelc_pred_5,holdout$price,0.5)
+ISOLS80=intervalScore(modelc_pred_8,holdout$price,0.8)
+out_modelc=rbind(ISOLS50$summary,ISOLS80$summary)
+colnames(out_modelc)=c("level","avgleng","IS","cover")
+out_modelc
+```
+
+
+
+```{r}
+modelc_pred_5=predict(model_chosen_variables,newdata=holdout,interval="prediction",level=0.5)
+modelc_pred_8=predict(model_chosen_variables,newdata=holdout,interval="prediction",level=0.8)
+ISOLS50=intervalScore(modelc_pred_5,holdout$price,0.5)
+ISOLS80=intervalScore(modelc_pred_8,holdout$price,0.8)
+out_modelc=rbind(ISOLS50$summary,ISOLS80$summary)
+colnames(out_modelc)=c("level","avgleng","IS","cover")
+out_modelc
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
