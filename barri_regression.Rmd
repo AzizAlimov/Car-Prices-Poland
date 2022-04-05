@@ -86,7 +86,6 @@ crossValidationCont2 = function(df,K,a,nperfmeas=6)
     year[[k]] = traine$year
     predi[[k]] = pred
     pri[[k]] = holdoute$price
-    #ols_step_best_subset( models[[k]])
   }
   avgperfmeas = apply(perfmeas,2,mean)
   list(perfmeasbyfold=perfmeas, avgperfmeas=avgperfmeas, models= models, year= year, pred = predi, price = pri)
@@ -147,6 +146,7 @@ summ = c(level,avglength,IS,cover)
 imiss = which(ilow | ihigh)
 list(summary=summ, imiss=imiss)
 }
+ols_step_best_subset(lm(price~mark_cat+year+mileage_cat+log_vol_engine+fuel+car_type+gdpc,data=train))
 x = crossValidationCont(train,3,0.5,6)
 y = crossValidationCont2(train,3,0.5,6)
 z = crossValidationCont3(train,3,0.5,6)
