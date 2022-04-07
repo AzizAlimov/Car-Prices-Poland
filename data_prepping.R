@@ -3,6 +3,7 @@ library(forcats)
 library(ggplot2)
 library(magrittr)
 library(tibble)
+library(corrplot)
 
 transform_price <- function(Data) {
   Data$price_pln = Data$price
@@ -115,6 +116,13 @@ select_subset <- function(Data, num) {
   subset
 }
 
+spearman_corr <- function(Data, var_indices) {
+  cordata= Data[,var_indices]
+  corMat=cor(cordata,method="spearman")
+  print(round(corMat,3))
+  corrplot(corMat, method="number", type="upper", diag=FALSE)
+}
+
 dat = read.csv(file='./data/Car_Prices_Poland_Kaggle.csv')
 dat_processed = perform_transformations(dat)
 dat_selected = filter_categories(dat_processed)
@@ -124,6 +132,8 @@ save(file="data/car_prices_transformed.RData", dat_selected)
 
 subset <- select_subset(dat_processed, 12000)
 subset_selected = filter_categories(subset)
+
+spearman_corr(subset, c(1,5,6,8,13))
 
 save(file="data/car_prices_subset.RData", subset_selected)
 save(file="data/car_prices_subset_all.RData", subset)

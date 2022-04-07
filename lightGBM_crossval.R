@@ -7,7 +7,7 @@ lgb_params_large = list(objective="quantile",
                   alpha=0.5, 
                   reg_alpha=1,
                   reg_lambda=1,
-                  num_leaves=40,
+                  num_leaves=20,
                   subsample=0.9,
                   min_child_samples=40,
                   learning_rate=0.1,
@@ -97,7 +97,7 @@ crossValidationCont = function(df,K,nperfmeas=10,seed,lgb_params)
   results = c(is50_results$summ, is80_results$summ, r2, rmse)
   
   model_importance = lgb.importance(lgb_model, percentage = TRUE)
-  lgb.plot.importance(model_importance, measure="Gain")
+  #lgb.plot.importance(model_importance, measure="Gain")
   
   resids_holdout = (holdout_labels-holdout_pred)
   plot(holdout_pred, resids_holdout)
@@ -111,5 +111,5 @@ crossValidationCont = function(df,K,nperfmeas=10,seed,lgb_params)
 }
 
 
-crossValidationCont(dat_one_hot, 3, nperfmeas = 10, 123, lgb_params_small)
-# crossValidationCont(dat_one_hot, 3, nperfmeas = 10, 123, lgb_params_large)
+#crossValidationCont(dat_one_hot, 3, nperfmeas = 10, 123, lgb_params_small)
+crossValidationCont(dat_one_hot, 3, nperfmeas = 10, 123, lgb_params_large)
