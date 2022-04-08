@@ -149,8 +149,17 @@ list(summary=summ, imiss=imiss)
 ols_step_best_subset(lm(price~mark_cat+year+mileage_cat+log_vol_engine+fuel+car_type+gdpc,data=train))
 reg_model= crossValidationCont(train,3,0.5,6)
 weighted_model = crossValidationCont2(train,3,0.5,6)
-transformed_model = crossValidationCont3(train,3,0.5,6)
+transformed_model = crossValidationCont3(train,3,0.8,6)
 ```
+
+```{r}
+d = lm(price~mark_cat+year+mileage_cat+log_vol_engine+fuel+car_type,data=train)
+plot(d$fitted.values,d$residuals, ylab="Residuals", xlab = "Fitted Values", main = "OLS Residuals")
+plot(train$year,d$residuals, ylab="Residuals", xlab = "Year",main = "Year against OLS Residuals")
+de = lm(price~mark_cat+year+mileage_cat+log_vol_engine+fuel+car_type,data=train, weights = 1/(train$year)^2)
+plot(de$fitted.values,de$residuals, ylab="Residuals", xlab = "Fitted Values",main = "WLS Residuals")
+```
+
 
 ```{r}
 plot(reg_model$models[[1]]$fitted.values,reg_model$models[[1]]$residuals)
@@ -170,16 +179,16 @@ plot(weighted_model$models[[2]]$fitted.values,weighted_model$models[[2]]$residua
 plot(weighted_model$models[[3]]$fitted.values,weighted_model$models[[3]]$residuals)
 ```
 ```{r}
-plot(transformed_model$models[[1]]$fitted.values,transformed_model$models[[1]]$residuals)
-plot(transformed_model$models[[2]]$fitted.values,transformed_model$models[[2]]$residuals)
-plot(transformed_model$models[[3]]$fitted.values,transformed_model$models[[3]]$residuals)
+plot(transformed_model$models[[1]]$fitted.values,transformed_model$models[[1]]$residuals, main = "Fold 1", xlab = "Fitted Values", ylab = "Residuals")
+plot(transformed_model$models[[2]]$fitted.values,transformed_model$models[[2]]$residuals, main = "Fold 2", xlab = "Fitted Values", ylab = "Residuals")
+plot(transformed_model$models[[3]]$fitted.values,transformed_model$models[[3]]$residuals, main = "Fold 3", xlab = "Fitted Values", ylab = "Residuals")
 ```
 
 ```{r}
 res1 = transformed_model$price[[1]]  - exp(transformed_model$models[[1]]$fitted.values)
 res2 = transformed_model$price[[2]]  - exp(transformed_model$models[[2]]$fitted.values)
 res3 = transformed_model$price[[3]]  - exp(transformed_model$models[[3]]$fitted.values)
-plot(exp(transformed_model$models[[1]]$fitted.values),res1)
-plot(exp(transformed_model$models[[2]]$fitted.values),res2)
-plot(exp(transformed_model$models[[3]]$fitted.values),res3)
+plot(exp(transformed_model$models[[1]]$fitted.values),res1, main = "Fold 1", xlab = "Fitted Values", ylab = "Residuals")
+plot(exp(transformed_model$models[[2]]$fitted.values),res2, main = "Fold 2", xlab = "Fitted Values", ylab = "Residuals")
+plot(exp(transformed_model$models[[3]]$fitted.values),res3, main = "Fold 3", xlab = "Fitted Values", ylab = "Residuals")
 ```
