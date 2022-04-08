@@ -5,6 +5,8 @@ library(corrplot)
 
 cars <- read.csv("./data/Car_Prices_Poland_Kaggle.csv")
 
+# Given dataframe and categorical variable, print number of categories and 
+# number of NA values
 print_info <- function(Data, category_name) {
   cat("Explanatory variable:", category_name, "\n")
   num_categories = length(unique(Data[[category_name]]))
@@ -14,6 +16,8 @@ print_info <- function(Data, category_name) {
   print(table(Data[[category_name]]))
 }
 
+# Given dataframe and categorical variable, plot the boxplot vs price. x_name is
+# x-axis label
 make_boxplot <- function(Data, category_name, x_name) {
     plot = ggplot(Data) +
       aes(x = fct_reorder(.data[[category_name]], price, .fun=median), y=price) +
@@ -21,6 +25,7 @@ make_boxplot <- function(Data, category_name, x_name) {
       labs(x = x_name)
 }
 
+# Given dataframe and variable, plot the frequency histogram. x_name is x-axis label
 make_hist <- function(Data, category_name, x_name, continuous) {
   if (continuous) {
     if (category_name == "year") {
@@ -38,10 +43,12 @@ make_hist <- function(Data, category_name, x_name, continuous) {
   }
 }
 
+# Given dataframe and variable, plot the scatterplot of variable vs price.
 make_scatterplot <- function(Data, category_name, x_name) {
   plot(Data[[category_name]], Data$price, ylab="Price in USD", xlab=x_name,main=sprintf("Scatterplot  Price vs %s", x_name))
 }
 
+# Given dataframe and variable, make boxplot, histogram, and/or scatterplot
 make_plots_print_info <- function(Data, category_name, x_name, make_boxplot=TRUE, make_hist = TRUE, continuous = FALSE) {
   if (make_boxplot) {
     plot(make_boxplot(Data, category_name, x_name))
@@ -59,39 +66,33 @@ make_plots_print_info <- function(Data, category_name, x_name, make_boxplot=TRUE
   }
 }
 
-clean_data <- function(Data) {
+# Clean up data from presentation. Convert price to USD.
+clean_and_prepare_data <- function(Data) {
+  Data$price = Data$price * 0.23
+  Data$logprice = log(Data$price)
   Data = Data %>% group_by(province) %>% filter(n() >= 50) %>% ungroup() %>% as.data.frame()
   Data %>% filter(year > 1987) 
 }
 
-cars <- clean_data(cars)
+# Print Spearman correlation of categories
+get_spearman_coor <- function(Data, categories) {
+  cordata= Data[,categories]
+  corMat=cor(cordata,method="spearman") 
+  print(round(corMat,3))
+}
+
+cars <- clean_and_prepare_data(cars)
 
 make_plots_print_info(cars, 'fuel', 'Fuel type')
-
-nrow(unique(cars['city']))
-less_than_10 = cars %>% group_by(city) %>% filter(n() < 10) %>% ungroup()
-nrow(unique(less_than_10['city']))
-less_than_100 = cars %>% group_by(city) %>% filter(n() < 100) %>% ungroup()
-nrow(unique(less_than_100['city']))
-
 make_plots_print_info(cars, 'province', "Province")
+make_plots_print_info(cars, "year", "Year", FALSE, TRUE, TRUE)
+make_plots_print_info(cars, "mileage", "Mileage (km)", FALSE, TRUE, TRUE)
+make_plots_print_info(cars, "vol_engine", "Engine Volume (cc)", FALSE, TRUE, TRUE)
+make_plots_print_info(cars, "price", "Price (USD)", FALSE, TRUE, TRUE)
+make_plots_print_info(cars, "logprice", "Log Price Log(USD)", FALSE, TRUE, TRUE)
+make_plots_print_info(cars, "mark", "Car Mark")
+make_plots_print_info(cars, "model", "Car Model")
 
+get_spearman_coor(cars, c(5,6,7,11))
 
-# Barry's stuff starts here
-
-make_plots_print_info(cars, "year", "Year", FALSE, TRUE)
-make_plots_print_info(cars, "mileage", "Mileage", FALSE, TRUE, TRUE)
-make_plots_print_info(cars, "vol_engine", "Engine Volume", FALSE, TRUE, TRUE)
-
-cordata= cars[,c(5,6,7,11)]
-corMat=cor(cordata,method="spearman") 
-print(round(corMat,3))
-
-hist(cars$price,xlab = "Price", main="Histogram of Price",breaks = 200)
-hist(log(cars$price),xlab = "log(Price)", main="Histogram of log(Price)",breaks = 200)
-cars$exp[cars$price>19228] <- "Expensive"
-cars$exp[4830>cars$price] <- "Cheap"
-cars$exp = as.factor(cars$exp)
-cars$exp  = factor(cars$exp, levels=c("Cheap", "Average", "Expensive"))
-plot(cars$exp, main="Binning of Price", xlab="Category of Price", ylab="Frequence")
-
+save(file="data/presentation_data.RData", cars)

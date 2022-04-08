@@ -135,5 +135,5 @@ subset_selected = filter_categories(subset)
 
 spearman_corr(subset, c(1,5,6,8,13))
 
-save(file="data/car_prices_subset.RData", subset_selected)
+save(file="data/car_prices_subset_selected.RData", subset_selected)
 save(file="data/car_prices_subset_all.RData", subset)
