@@ -120,7 +120,7 @@ spearman_corr <- function(Data, var_indices) {
   cordata= Data[,var_indices]
   corMat=cor(cordata,method="spearman")
   print(round(corMat,3))
-  corrplot(corMat, method="number", type="upper", diag=FALSE)
+  corrplot(corMat, method="number", type="upper", diag=FALSE, col=colorRampPalette(c("blue", "red"))(100))
 }
 
 dat = read.csv(file='./data/Car_Prices_Poland_Kaggle.csv')
