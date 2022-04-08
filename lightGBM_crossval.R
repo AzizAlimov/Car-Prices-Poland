@@ -100,7 +100,7 @@ crossValidationCont = function(df,K,nperfmeas=10,seed,lgb_params)
   lgb.plot.importance(model_importance, measure="Gain")
   
   resids_holdout = (holdout_labels-holdout_pred)
-  plot(holdout_pred, resids_holdout)
+  plot(holdout_pred, resids_holdout, ylab = "Residuals", xlab = "Fitted Values", main = paste("Fold ",k))
   
   print(results)
   
