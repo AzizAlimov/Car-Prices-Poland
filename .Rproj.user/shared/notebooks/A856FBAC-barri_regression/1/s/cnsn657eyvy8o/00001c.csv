@@ -1,1 +1,0 @@
-"0","plot(train$year, model_normal_variables$residuals, ylab=""Residuals"",xlab=""Year"")"

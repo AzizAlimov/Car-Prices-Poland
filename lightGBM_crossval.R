@@ -1,7 +1,7 @@
 library(lightgbm)
 
 load("data/one_hot_subset.RData")
-source("helpers.R")
+source("functions.R")
 seed=123
 
 lgb_params = list(objective="quantile", 

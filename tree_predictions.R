@@ -10,7 +10,7 @@ library(randomForest)
 
 options(warn=-1)
 
-source("./helpers.R")
+source("./functions.R")
 
 get_quantiles <- function(training, holdout, model, bottom, upper, predictions) {
   meanpredRegTree=predictions
