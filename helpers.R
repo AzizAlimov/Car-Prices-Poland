@@ -47,7 +47,7 @@ crossValidationCont = function(df,K,training_func,predict_func,nperfmeas=4) {
     holdout = df[indices,]
     models[[i]] = training_func(train, holdout)
     print(sprintf("Fold %d", i))
-    results = predict_func(models[[i]], train, holdout)
+    results = predict_func(models[[i]], train, holdout, i)
     
     IS50 = results[1,]
     IS80 = results[2,]

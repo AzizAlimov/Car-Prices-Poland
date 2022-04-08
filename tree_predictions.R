@@ -8,24 +8,9 @@ library(ggplot2)
 library(quantregForest)
 library(randomForest)
 
-
 options(warn=-1)
 
-FindUniquePos=function(values,groupValues,tolerance=1.e-5) { 
-  ngroup = length(groupValues) # number of groups (nodes)
-  temp = unique(groupValues)
-  if(length(temp)<ngroup)
-  { cat("Won't work: non-unique group values\n"); return(0); }
-  npred = length(values) # number of cases to bin into a group label
-  group = rep(0,npred) # initialize as group 0
-  for(i in 1:ngroup)
-  { # group[values==groupValues[i]]=i # better to use tolerance
-    igroup = (abs(values-groupValues[i])<tolerance)
-    group[igroup] = i # group label according to position in groupValues
-  }
-  if( any(group==0) ) cat("Warning: some values not matched to groupValues\n")
-  return(group)
-}
+source("./helpers.R")
 
 get_quantiles <- function(training, holdout, model, bottom, upper, predictions) {
   meanpredRegTree=predictions
@@ -41,8 +26,7 @@ get_quantiles <- function(training, holdout, model, bottom, upper, predictions) 
   predIntRegTree
 }
 
-
-predict_tree <- function(model, training, holdout, prune = FALSE) {
+predict_tree <- function(model, training, holdout, fold) {
   rpart.plot(model)
   predictions = predict(model,newdata=holdout,type="vector")
   pred50Int=get_quantiles(training, holdout, model, 0.25, 0.75, predictions)
@@ -58,7 +42,7 @@ train_tree <- function(training, holdout) {
   rpart(price~.,data=training)
 }
 
-predict_forest <- function(forest, training, holdout) {
+predict_forest <- function(forest, training, holdout, fold) {
   predRF = predict(forest, what=c(.1,.25,.5,.75,.9), newdata=holdout[,-1])
   IS50qRF=intervalScore(predRF[,c(3,2,4)],holdout$price, 0.5)
   IS80qRF=intervalScore(predRF[,c(3,1,5)],holdout$price, 0.8)
@@ -73,43 +57,7 @@ train_forest <- function(training, holdout) {
   quantregForest(x,y,importance=TRUE)
 }
 
-crossValidationCont = function(df,K,training_func,predict_func,nperfmeas=4) {
-  set.seed(123)
-  n = nrow(df)
-  nhold = round(n/K)
-  iperm = sample(n)
-  perfmeas50 = matrix(0, K, nperfmeas)  
-  perfmeas80 = matrix(0, K, nperfmeas)
-  models = vector(mode="list", length=3)
-  i = 1
-  while (i <= K) { 
-    indices = (((i-1)*nhold+1):(i*nhold))
-    if( i==K ) indices = (((i-1)*nhold+1):n)
-    indices = iperm[indices]
-    train = df[-indices,]
-    holdout = df[indices,]
-    models[[i]] = training_func(train, holdout)
-    print(sprintf("Fold %d", i))
-    results = predict_func(models[[i]], train, holdout)
-    
-    IS50 = results[1,]
-    IS80 = results[2,]
-    
-    colnames(results)=c("level","avgleng","IS","cover")
-    print(results)
-    
-    perfmeas50[i,1:4] = IS50
-    perfmeas80[i,1:4] = IS80
-    i = i + 1
-  }
-  avgperfmeas50 = apply(perfmeas50,2,mean)
-  avgperfmeas80 = apply(perfmeas80,2,mean)
-  list(perfmeas50byfold=perfmeas50, avgperfmeas50=avgperfmeas50,
-       perfmeas80byfold=perfmeas80, avgperfmeas80=avgperfmeas80)
-}
-
-source("helpers.R")
-load("data/car_prices_subset_all.RData")
+load("data/car_prices_subset.RData")
 crossValidationCont(subset_selected, 3, train_tree, predict_tree)
 crossValidationCont(subset_selected, 3, train_forest, predict_forest)
 
