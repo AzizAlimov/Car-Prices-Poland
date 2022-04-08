@@ -33,7 +33,7 @@ lightgbm_training <- function(train, holdout) {
   models
 }
 
-lightgbm_testing <- function(models, train, holdout) {
+lightgbm_testing <- function(models, train, holdout, fold) {
   holdout_labels = holdout$price
   holdout = subset(holdout, select=-c(price))
   holdout_matrix = as.matrix(holdout)
@@ -54,7 +54,7 @@ lightgbm_testing <- function(models, train, holdout) {
   lgb.plot.importance(model_importance, measure="Gain")
   
   resids_holdout = (holdout_labels-holdout_preds[[1]])
-  plot(holdout_preds[[1]], resids_holdout, ylab = "Residuals", xlab = "Fitted Values")
+  plot(holdout_preds[[1]], resids_holdout, ylab = "Residuals", xlab = "Fitted Values", main = sprintf("Fold %d", fold))
   results
 }
 

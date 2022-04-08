@@ -15,11 +15,6 @@ train_regression_log <- function(training,holdout) {
 }
 
 predict_regression_log <- function(model, training, holdout, fold) {
-  res = exp(model$model$`I(log(price))`)  - exp(model$fitted.values)
-  print(res)
-  print(model$fitted.values)
-  plot(exp(model$fitted.values), res, main = sprintf("Fold %d", fold), xlab = "Fitted Values", ylab = "Residuals")
-  
   pred50 = predict(model,newdata=holdout,interval="prediction",level=0.5)
   pred50 = exp(pred50)
   
@@ -29,17 +24,24 @@ predict_regression_log <- function(model, training, holdout, fold) {
   IS50=intervalScore(pred50,holdout$price,0.5)
   IS80=intervalScore(pred80,holdout$price,0.8)
   out=rbind(IS50$summary,IS80$summary)
+  
+  predicted = predict(model,newdata=holdout)
+  resids_holdout = (holdout$price-exp(predicted))
+  plot(exp(predicted), resids_holdout, main = sprintf("Fold %d", fold), ylab = "Residuals", xlab = "Fitted Values")
   out
 }
 
 predict_regression_weights <- function(model, training, holdout, fold) {
-  plot(model$fitted.values, model$residuals, main = sprintf("Fold %d", fold), xlab = "Fitted Values", ylab = "Residuals")
   pred50Int = predict(model,newdata=holdout,interval="prediction",level=0.5, weights = 1/(holdout$year)^2)
   pred80Int = predict(model,newdata=holdout,interval="prediction",level=0.8, weights = 1/(holdout$year)^2)
   
   IS50=intervalScore(pred50Int,holdout$price,0.5)
   IS80=intervalScore(pred80Int,holdout$price,0.8)
   out=rbind(IS50$summary,IS80$summary)
+  
+  predicted = predict(model,newdata=holdout, weights = 1/(holdout$year)^2)
+  resids_holdout = (holdout$price-predicted)
+  plot(predicted, resids_holdout, main = sprintf("Fold %d", fold), ylab = "Residuals", xlab = "Fitted Values")
   out
 }
 
@@ -51,6 +53,9 @@ predict_regression <- function(model, training, holdout, fold) {
   IS50=intervalScore(pred50Int,holdout$price,0.5)
   IS80=intervalScore(pred80Int,holdout$price,0.8)
   out=rbind(IS50$summary,IS80$summary)
+  predicted = predict(model,newdata=holdout)
+  resids_holdout = (holdout$price-predicted)
+  plot(predicted, resids_holdout, main = sprintf("Fold %d", fold), ylab = "Residuals", xlab = "Fitted Values")
   out
 }
 
