@@ -3,7 +3,6 @@
 library(ggplot2)
 library(dplyr)
 library(forcats)
-library(corrplot)
 
 cars <- read.csv("./data/Car_Prices_Poland_Kaggle.csv")
 

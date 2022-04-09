@@ -1,11 +1,6 @@
 # Perform cross-validation for regression tree
-library(mlbench)
 library(rpart)
 library(rpart.plot)
-library(VGAM)
-library(pROC)
-library(caret)
-library(ggplot2)
 
 options(warn=-1)
 

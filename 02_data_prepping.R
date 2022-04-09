@@ -4,7 +4,6 @@
 # one-hot encoded (for the categorical variables) version of the dataset
 # used by LGBM
 
-
 library(dplyr)
 library(forcats)
 library(ggplot2)

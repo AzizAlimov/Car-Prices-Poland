@@ -1,10 +1,8 @@
 # Initial phase 2 LGBM training to pick hyperparameters for cross validation
-
-library(lightgbm)
-library(dplyr)
 set.seed(123)
 load("data/one_hot_subset.RData")
 source("functions.R")
+library(lightgbm)
 
 # Train and test LGBM on dataframe, splitting it into 10000 training samples and 2000 test
 run_lgb = function(Data) {

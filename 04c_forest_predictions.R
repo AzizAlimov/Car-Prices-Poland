@@ -1,6 +1,5 @@
 # Perform cross-validation for quantile random forest
 library(quantregForest)
-library(randomForest)
 source("functions.R")
 
 # Run holdout set prediction on trained quantile random forest model and return
