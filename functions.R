@@ -1,3 +1,14 @@
+# Shared functions used across different models]
+
+# Returns interval score summary of predictions
+# Inputs:
+# predObj: contains predictions, and lower and upper bounds of the 
+# prediction intervals
+# actual: the actual values for each prediction
+# level: the prediction interval level
+# Returns:
+# summary: summary with the level, average length, interval score, and coverage rate
+# imiss: predictions that were missed in the intervals
 intervalScore = function(predObj, actual, level) {
   n <- nrow(predObj)
   alpha <- 1 - level
@@ -10,25 +21,8 @@ intervalScore = function(predObj, actual, level) {
   IS <- (sumlength + sumlow + sumhigh) / n # average length + average under/over penalties
   cover <- mean(actual >= predObj[, 2] & actual <= predObj[, 3])
   summ <- c(level, avglength, IS, cover)
-  # summary with level, average length, interval score, coverage rate, r^2, rmse
   imiss <- which(ilow | ihigh)
   list(summary = summ, imiss = imiss)
-}
-
-FindUniquePos=function(values,groupValues,tolerance=1.e-5) { 
-  ngroup = length(groupValues) # number of groups (nodes)
-  temp = unique(groupValues)
-  if(length(temp)<ngroup)
-  { cat("Won't work: non-unique group values\n"); return(0); }
-  npred = length(values) # number of cases to bin into a group label
-  group = rep(0,npred) # initialize as group 0
-  for(i in 1:ngroup)
-  { # group[values==groupValues[i]]=i # better to use tolerance
-    igroup = (abs(values-groupValues[i])<tolerance)
-    group[igroup] = i # group label according to position in groupValues
-  }
-  if( any(group==0) ) cat("Warning: some values not matched to groupValues\n")
-  return(group)
 }
 
 crossValidationCont = function(df,K,training_func,predict_func,nperfmeas=4) {

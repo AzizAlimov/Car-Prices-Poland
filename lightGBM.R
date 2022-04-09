@@ -1,28 +1,7 @@
 library(lightgbm)
 library(dplyr)
 
-load("data/car_prices_subset.RData")
-
-dat_one_hot <- subset_selected
-dat_one_hot$mark_cat <- as.factor(dat_one_hot$mark_cat) 
-dummies <- data.frame(model.matrix( ~ 0 + mark_cat, dat_one_hot))  # create one-hot dummies
-dat_one_hot <- cbind(dat_one_hot %>% select(-mark_cat), dummies)
-
-
-dat_one_hot$mileage_cat <- as.factor(dat_one_hot$mileage_cat) 
-dummies <- data.frame(model.matrix( ~ 0 + mileage_cat, dat_one_hot))  # create one-hot dummies
-dat_one_hot <- cbind(dat_one_hot %>% select(-mileage_cat), dummies)
-
-dat_one_hot$car_type <- as.factor(dat_one_hot$car_type) 
-dummies <- data.frame(model.matrix( ~ 0 + car_type, dat_one_hot))  # create one-hot dummies
-dat_one_hot <- cbind(dat_one_hot %>% select(-car_type), dummies)
-
-dat_one_hot$fuel <- as.factor(dat_one_hot$fuel) 
-dummies <- data.frame(model.matrix( ~ 0 + fuel, dat_one_hot))  # create one-hot dummies
-dat_one_hot <- cbind(dat_one_hot %>% select(-fuel), dummies)
-
-save(file="data/one_hot_subset.RData", dat_one_hot)
-
+load("data/one_hot_subset.RData")
 
 run_lgb = function(lgb_params) {
 

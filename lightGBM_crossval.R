@@ -1,5 +1,10 @@
+# Perform cross-validation on LGBM using the hyperparameters picked from
+# Phase 2
+
+
 library(lightgbm)
 
+# Load the one hot dataset
 load("data/one_hot_subset.RData")
 source("functions.R")
 seed=123
@@ -14,6 +19,7 @@ lgb_params = list(objective="quantile",
                   learning_rate=0.1,
                   seed=seed)
 
+# Given training set and holdout, run LGBM training
 lightgbm_training <- function(train, holdout) {
   train_labels = train$price
   holdout_labels = holdout$price
@@ -33,6 +39,9 @@ lightgbm_training <- function(train, holdout) {
   models
 }
 
+# Run holdout set prediction on trained regression tree model and return
+# summaries from 50% and 80% interval score evaluation.
+# Plot the importance plot and residuals for that fold
 lightgbm_testing <- function(models, train, holdout, fold) {
   holdout_labels = holdout$price
   holdout = subset(holdout, select=-c(price))
@@ -58,6 +67,6 @@ lightgbm_testing <- function(models, train, holdout, fold) {
   results
 }
 
+# Run cross validation
 crossValidationCont(dat_one_hot, 3, lightgbm_training, lightgbm_testing, nperfmeas = 4)
-
 

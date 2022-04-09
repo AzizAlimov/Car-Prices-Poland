@@ -1,3 +1,5 @@
+# Perform cross-validation for regression tree and quantile random forest
+
 library(mlbench)
 library(rpart)
 library(rpart.plot)
@@ -12,6 +14,15 @@ options(warn=-1)
 
 source("./functions.R")
 
+# Returns the quantile values of the trained regression tree model for holdout values
+# Inputs:
+# training: the training dataframe
+# holdout: the holdout dataframe
+# model: the trained regression tree model
+# bottom: the bottom quantile, as a value between 0 and 1
+# upper: the upper quantile, as a value between 0 and 1
+# predictions: the holdout set predictions
+# Returns: list of predictions and upper and lower interval bounds
 get_quantiles <- function(training, holdout, model, bottom, upper, predictions) {
   meanpredRegTree=predictions
   meanByTNode=tapply(training$price, model$where, mean)
@@ -26,6 +37,31 @@ get_quantiles <- function(training, holdout, model, bottom, upper, predictions) 
   predIntRegTree
 }
 
+# Find group position for each element of a vector
+# Inputs:
+# values: vector which should values that depends on the group
+# groupValues: group values in the vector (hopefully unique)
+# tolerance: tolerance for matching equality
+# Returns group vector with membership label for each element of 'values'
+FindUniquePos=function(values,groupValues,tolerance=1.e-5) { 
+  ngroup = length(groupValues) # number of groups (nodes)
+  temp = unique(groupValues)
+  if(length(temp)<ngroup)
+  { cat("Won't work: non-unique group values\n"); return(0); }
+  npred = length(values) # number of cases to bin into a group label
+  group = rep(0,npred) # initialize as group 0
+  for(i in 1:ngroup)
+  { # group[values==groupValues[i]]=i # better to use tolerance
+    igroup = (abs(values-groupValues[i])<tolerance)
+    group[igroup] = i # group label according to position in groupValues
+  }
+  if( any(group==0) ) cat("Warning: some values not matched to groupValues\n")
+  return(group)
+}
+
+# Run holdout set prediction on trained regression tree model and return
+# summaries from 50% and 80% interval score evaluation.
+# Plot the trained decision tree and residuals
 predict_tree <- function(model, training, holdout, fold) {
   rpart.plot(model)
   predictions = predict(model,newdata=holdout,type="vector")
@@ -35,28 +71,39 @@ predict_tree <- function(model, training, holdout, fold) {
   IS50=intervalScore(pred50Int,holdout$price,0.5)
   IS80=intervalScore(pred80Int,holdout$price,0.8)
   out=rbind(IS50$summary,IS80$summary)
+  resids_holdout = (holdout$price - predictions)
+  plot(predictions, resids_holdout, ylab = "Residuals", xlab = "Fitted Values", main = sprintf("Fold %d", fold))
   out
 }
 
+# Train the regression tree on the training set
 train_tree <- function(training, holdout) {
   rpart(price~.,data=training)
 }
 
+# Run holdout set prediction on trained quantile random forest model and return
+# summaries from 50% and 80% interval score evaluation. 
+# Print the importance plot for that fold and residuals
 predict_forest <- function(forest, training, holdout, fold) {
   predRF = predict(forest, what=c(.1,.25,.5,.75,.9), newdata=holdout[,-1])
   IS50qRF=intervalScore(predRF[,c(3,2,4)],holdout$price, 0.5)
   IS80qRF=intervalScore(predRF[,c(3,1,5)],holdout$price, 0.8)
   outqRF=rbind(IS50qRF$summary,IS80qRF$summary)
   varImpPlot(forest)
+
+  resids_holdout = (holdout$price - predRF[,3])
+  plot(predRF[,3], resids_holdout, ylab = "Residuals", xlab = "Fitted Values", main = sprintf("Fold %d", fold))
   outqRF
 }
 
+# Train quantile regression forest on training set
 train_forest <- function(training, holdout) {
   x = data.frame(training[,-1])
   y = unlist(training[,1], use.names=FALSE)
   quantregForest(x,y,importance=TRUE)
 }
 
+# Run the cross validation
 load("data/car_prices_subset.RData")
 crossValidationCont(subset_selected, 3, train_tree, predict_tree)
 crossValidationCont(subset_selected, 3, train_forest, predict_forest)
