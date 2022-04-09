@@ -18,7 +18,13 @@ Run in the order indicated by the numbers; 01_presentation_analysis.R -> 02_data
 
 
 Required R libraries
-library(ggplot2): ggplot, aes, geom_boxplot, labs, geom_histogram, fct_reorder, 
-library(forcats)
-library(dplyr): group_by, filter, ungroup, filter
-library(corrplot)
+library(ggplot2): ggplot, aes, geom_boxplot, labs, geom_histogram 
+library(forcats): fct_reorder
+library(dplyr): group_by, filter, ungroup, filter, mutate, select
+library(corrplot): corrplot
+library(magrittr): %>% operator
+library(tibble): as_tibble
+library(lightgbm): lgb.importance, lgb.plot.importance, lgb.Dataset, lgb.train
+library(quantregForest): quantregForest
+library(rpart): rpart
+library(rpart.plot): rpart.plot
