@@ -68,5 +68,5 @@ lightgbm_testing <- function(models, train, holdout, fold) {
 }
 
 # Run cross validation
-crossValidationCont(dat_one_hot, 3, lightgbm_training, lightgbm_testing, nperfmeas = 4)
+crossValidationCont(dat_one_hot, 3, lightgbm_training, lightgbm_testing, model_name="LGBM")
 
