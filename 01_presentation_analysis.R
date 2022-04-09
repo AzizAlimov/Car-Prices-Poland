@@ -1,9 +1,8 @@
 # Generates the initial plots and stats used for the first project presentation
 
-
 library(ggplot2)
-library(forcats)
 library(dplyr)
+library(forcats)
 library(corrplot)
 
 cars <- read.csv("./data/Car_Prices_Poland_Kaggle.csv")
