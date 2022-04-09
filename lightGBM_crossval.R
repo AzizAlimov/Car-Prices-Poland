@@ -1,5 +1,10 @@
+# Perform cross-validation on LGBM using the hyperparameters picked from
+# Phase 2
+
+
 library(lightgbm)
 
+# Load the one hot dataset
 load("data/one_hot_subset.RData")
 source("functions.R")
 seed=123

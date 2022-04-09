@@ -1,10 +1,10 @@
 library(lightgbm)
 library(dplyr)
 
-load("data/car_prices_subset.RData")
-source("functions.R")
+load("data/one_hot_subset.RData")
 
-run_lgb = function(params) {
+run_lgb = function(lgb_params) {
+
   train = dat_one_hot[1:10000,]
   test = dat_one_hot[10001:12000,] 
   train_labels = train$price
