@@ -1,3 +1,6 @@
+
+# Function taken from course notes, calculates the interval score for a given
+# level from predictions and actual values
 intervalScore = function(predObj, actual, level) {
   n <- nrow(predObj)
   alpha <- 1 - level
@@ -15,6 +18,8 @@ intervalScore = function(predObj, actual, level) {
   list(summary = summ, imiss = imiss)
 }
 
+
+#Function to 
 FindUniquePos=function(values,groupValues,tolerance=1.e-5) { 
   ngroup = length(groupValues) # number of groups (nodes)
   temp = unique(groupValues)
@@ -31,6 +36,8 @@ FindUniquePos=function(values,groupValues,tolerance=1.e-5) {
   return(group)
 }
 
+
+#Generic function to 
 crossValidationCont = function(df,K,training_func,predict_func,nperfmeas=4) {
   set.seed(123)
   n = nrow(df)
@@ -62,4 +69,62 @@ crossValidationCont = function(df,K,training_func,predict_func,nperfmeas=4) {
   avgperfmeas80 = apply(perfmeas80,2,mean)
   list(perfmeas50byfold=perfmeas50, avgperfmeas50=avgperfmeas50,
        perfmeas80byfold=perfmeas80, avgperfmeas80=avgperfmeas80)
+}
+
+create_lgb_params <- function() {
+  list(objective="quantile", 
+       alpha=0.5, 
+       reg_alpha=1,
+       reg_lambda=1,
+       num_leaves=20,
+       subsample=0.9,
+       min_child_samples=40,
+       learning_rate=0.1,
+       verbosity=-1,
+       seed=123)
+}
+
+lightgbm_training <- function(train, holdout) {
+  train_labels = train$price
+  holdout_labels = holdout$price
+  
+  train = subset(train, select=-c(price))
+  holdout = subset(holdout, select=-c(price))
+  train_matrix = as.matrix(train)
+  holdout_matrix = as.matrix(holdout)
+  
+  lgb_train = lgb.Dataset(data=train_matrix, label=train_labels)
+  models = vector(length=5, mode='list')
+  alphas = c(0.5, 0.1, 0.9, 0.25, 0.75)
+  print(lgb_params)
+  for (i in 1:5) {
+    lgb_params$alpha= alphas[i]
+    models[[i]] = lgb.train(params=lgb_params, data=lgb_train, nrounds=100, verbose_eval= F)
+  }
+  models
+}
+
+lightgbm_testing <- function(models, train, holdout, fold) {
+  holdout_labels = holdout$price
+  holdout = subset(holdout, select=-c(price))
+  holdout_matrix = as.matrix(holdout)
+  holdout_preds = vector(length=5, mode='list')
+  for (i in 1:5) {
+    holdout_preds[i] = predict(models[i], holdout_matrix)
+  }
+  
+  pred50 = cbind(holdout_preds[[1]], holdout_preds[[2]], holdout_preds[[3]])
+  is50_results = intervalScore(pred50, holdout_labels, 0.5)
+  
+  pred80 = cbind(holdout_preds[[1]], holdout_preds[[4]], holdout_preds[[5]])
+  is80_results = intervalScore(pred80, holdout_labels, 0.8)
+  
+  results = rbind(is50_results$summary, is80_results$summary)
+  
+  model_importance = lgb.importance(models[[1]], percentage = TRUE)
+  lgb.plot.importance(model_importance, measure="Gain")
+  
+  resids_holdout = (holdout_labels-holdout_preds[[1]])
+  plot(holdout_preds[[1]], resids_holdout, ylab = "Residuals", xlab = "Fitted Values", main = sprintf("Fold %d", fold))
+  results
 }
