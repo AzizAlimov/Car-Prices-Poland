@@ -86,18 +86,18 @@ lightgbm_training <- function(train, holdout) {
   print(lgb_params)
   for (i in 1:5) {
     lgb_params$alpha= alphas[i]
-    models[[i]] = lgb.train(params=lgb_params, data=lgb_train, nrounds=100, verbose_eval= F)
+    models[[i]] = lgb.train(params=lgb_params, data=lgb_train, nrounds=100)
   }
   models
 }
 
-lightgbm_testing <- function(models, train, holdout, fold) {
+lightgbm_testing <- function(models, train, holdout, fold = -1) {
   holdout_labels = holdout$price
   holdout = subset(holdout, select=-c(price))
   holdout_matrix = as.matrix(holdout)
   holdout_preds = vector(length=5, mode='list')
   for (i in 1:5) {
-    holdout_preds[i] = predict(models[i], holdout_matrix)
+    holdout_preds[[i]] = predict(models[[i]], holdout_matrix)
   }
   
   pred50 = cbind(holdout_preds[[1]], holdout_preds[[2]], holdout_preds[[3]])
@@ -112,6 +112,9 @@ lightgbm_testing <- function(models, train, holdout, fold) {
   lgb.plot.importance(model_importance, measure="Gain")
   
   resids_holdout = (holdout_labels-holdout_preds[[1]])
-  plot(holdout_preds[[1]], resids_holdout, ylab = "Residuals", xlab = "Fitted Values", main = sprintf("Fold %d", fold))
+  
+  if (fold != -1) {
+    plot(holdout_preds[[1]], resids_holdout, ylab = "Residuals", xlab = "Fitted Values", main = sprintf("Fold %d", fold))
+  }
   results
 }
