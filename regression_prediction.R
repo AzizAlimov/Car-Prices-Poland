@@ -74,7 +74,7 @@ predict_regression <- function(model, training, holdout, fold) {
   out
 }
 
-crossValidationCont(subset_selected, 3, train_regression, predict_regression)
-crossValidationCont(subset_selected, 3, train_regression_weights, predict_regression_weights)
-crossValidationCont(subset_selected, 3, train_regression_log, predict_regression_log)
+crossValidationCont(subset_selected, 3, train_regression, predict_regression, model_name="OLS")
+crossValidationCont(subset_selected, 3, train_regression_weights, predict_regression_weights, model_name="WLS")
+crossValidationCont(subset_selected, 3, train_regression_log, predict_regression_log, model_name="trans_OLS")
 

@@ -105,6 +105,6 @@ train_forest <- function(training, holdout) {
 
 # Run the cross validation
 load("data/car_prices_subset.RData")
-crossValidationCont(subset_selected, 3, train_tree, predict_tree)
-crossValidationCont(subset_selected, 3, train_forest, predict_forest)
+crossValidationCont(subset_selected, 3, train_tree, predict_tree, model_name="tree")
+crossValidationCont(subset_selected, 3, train_forest, predict_forest, model_name="forest")
 
