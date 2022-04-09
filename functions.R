@@ -1,4 +1,4 @@
-# Shared functions used across different models
+# Shared functions used across different models for training and cross validation
 
 # Returns interval score summary of predictions
 # Inputs:
@@ -84,6 +84,7 @@ crossValidationCont = function(df,K,training_func,predict_func,model_name="") {
        perfmeas80byfold=perfmeas80, avgperfmeas80=avgperfmeas80)
 }
 
+# Create the baseline params used for LGBM
 create_lgb_params <- function() {
   list(objective="quantile", 
        alpha=0.5, 
@@ -97,6 +98,7 @@ create_lgb_params <- function() {
        seed=123)
 }
 
+# Train an LGBM with quantile regression given train dataframe
 lightgbm_training <- function(train, holdout) {
   train_labels = train$price
   holdout_labels = holdout$price
@@ -117,6 +119,9 @@ lightgbm_training <- function(train, holdout) {
   models
 }
 
+# Run holdout set prediction on LGBM model and return
+# summaries from 50% and 80% interval score evaluation. 
+# Plot the residuals and importance plot for that fold
 lightgbm_testing <- function(models, train, holdout, fold = -1) {
   holdout_labels = holdout$price
   holdout = subset(holdout, select=-c(price))
